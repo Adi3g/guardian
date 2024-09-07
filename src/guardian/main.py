@@ -1,6 +1,7 @@
 from fastAPI import FastAPI
 from app.interface.api import router
 
+# Create the FastAPI app
 app = FastAPI(title="Guardian API")
 
 # Include the router
