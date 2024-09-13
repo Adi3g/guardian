@@ -55,3 +55,12 @@ async def handle_request(path: str, request: Request):
             return JSONResponse(status_code=response.status_code, content=response.json())
     except Exception as e:
         return JSONResponse(status_code=500, content={"detail": "Error handling request", "error": str(e)})
+
+@router.get("/health")
+def health_check():
+    """
+    Health check endpoint to monitor the status of the gateway.
+
+    :return: A message indicating the health status of the gateway
+    """
+    return {"status": "healthy", "message": "The Guardian gateway is running properly."}
