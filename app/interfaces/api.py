@@ -1,8 +1,10 @@
 # app/interfaces/api.py
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import RedirectResponse, JSONResponse
 from app.infrastructure.config_loader import load_config
 from app.core.services.gateway_service import GatewayService
+import httpx
 
 router = APIRouter()
 
@@ -31,3 +33,34 @@ def check_access(request: Request):
     client_ip = request.client.host
     service.check_access(client_ip)
     return {"message": "Access granted"}
+
+@router.get("/{path:path}")
+async def handle_request(path: str, request: Request):
+    """
+    Generic API endpoint to handle incoming requests, apply redirection rules, and load balancing.
+
+    :param path: The path of the incoming request
+    :param request: The incoming request object
+    :return: A redirection response, load balanced response, or the requested content
+    """
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    if redirect_url:
+        return RedirectResponse(url=redirect_url)
+
+    try:
+        next_server = service.get_next_server()
+        # Forward the request to the next server
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"http://{next_server['address']}:{next_server['port']}/{path}")
+            return JSONResponse(status_code=response.status_code, content=response.json())
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"detail": "Error handling request", "error": str(e)})
+
+@router.get("/health")
+def health_check():
+    """
+    Health check endpoint to monitor the status of the gateway.
+
+    :return: A message indicating the health status of the gateway
+    """
+    return {"status": "healthy", "message": "The Guardian gateway is running properly."}

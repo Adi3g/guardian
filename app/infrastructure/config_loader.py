@@ -14,6 +14,9 @@ def load_config(config_path: str) -> GatewayEntity:
         config = yaml.safe_load(file)
     general = config.get('general', {})
     access_control = config.get('access_control', {})
+    redirection = config.get('redirection', {})
+    load_balancing = config.get('load_balancing', {})
+    logging = config.get('logging', {})
 
     return GatewayEntity(
         name=general.get('gateway_name', 'Unnamed Gateway'),
@@ -21,5 +24,8 @@ def load_config(config_path: str) -> GatewayEntity:
         listen_address=general.get('listen_address', '0.0.0.0'),
         listen_port=general.get('listen_port', 8080),
         allowed_ips=access_control.get('allowed_ips', []),
-        blocked_ips=access_control.get('blocked_ips', [])
+        blocked_ips=access_control.get('blocked_ips', []),
+        redirection=redirection,
+        load_balancing=load_balancing,
+        logging=logging
     )

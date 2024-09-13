@@ -14,3 +14,36 @@ access_control:
   blocked_ips:
     - "192.168.1.100"
     - "192.168.1.101"
+
+redirection:
+  enabled: true
+  rules:
+    - name: "Redirect HTTP to HTTPS"
+      source_port: 80
+      destination_port: 443
+      action: "redirect"
+    - name: "API Redirection"
+      source_path: "/api/v1/*"
+      destination_path: "/api/v2/"
+      action: "redirect"
+
+load_balancing:
+  enabled: true
+  strategy: "round_robin"
+  servers:
+    - address: "192.168.2.20"
+      port: 8081
+    - address: "192.168.2.21"
+      port: 8081
+    - address: "192.168.2.22"
+      port: 8081
+
+logging:
+  enabled: true
+  log_level: "info"  # Options: debug, info, warning, error, critical
+  log_file: "guardian.log"
+  log_format: "%(levelname)s:     %(asctime)s - %(name)s - %(message)s"
+  log_rotation:
+    enabled: true
+    max_size: 10MB
+    backup_count: 5
