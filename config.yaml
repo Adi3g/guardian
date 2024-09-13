@@ -26,3 +26,14 @@ redirection:
       source_path: "/api/v1/*"
       destination_path: "/api/v2/"
       action: "redirect"
+
+load_balancing:
+  enabled: true
+  strategy: "round_robin"  # Options: round_robin, least_connections, ip_hash, random
+  servers:
+    - address: "192.168.2.20"
+      port: 8081
+    - address: "192.168.2.21"
+      port: 8081
+    - address: "192.168.2.22"
+      port: 8081

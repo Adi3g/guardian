@@ -2,10 +2,12 @@
 
 from fastapi import HTTPException
 from app.core.entities.gateway_entity import GatewayEntity
+from itertools import cycle
 
 class GatewayService:
     """
-    Service layer for managing gateway operations including access control and redirection.
+    Service layer for managing gateway operations including access control,
+    redirection, and load balancing.
     """
 
     def __init__(self, gateway: GatewayEntity):
@@ -15,6 +17,7 @@ class GatewayService:
         :param gateway: The gateway entity containing configuration and state
         """
         self.gateway = gateway
+        self.server_iterator = cycle(self.gateway.config['load_balancing']['servers']) if self.gateway.config.get('load_balancing', {}).get('enabled', False) else None
 
     def start(self):
         """
@@ -55,3 +58,14 @@ class GatewayService:
                     return request_path.replace(rule['source_path'].strip('*'), rule['destination_path'])
 
         return ""
+
+    def get_next_server(self) -> dict:
+        """
+        Retrieves the next server in the load balancing pool based on the selected strategy.
+
+        :return: A dictionary containing the address and port of the next server
+        """
+        if not self.server_iterator:
+            raise HTTPException(status_code=503, detail="Load balancing is disabled or misconfigured.")
+        
+        return next(self.server_iterator)
