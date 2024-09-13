@@ -14,3 +14,15 @@ access_control:
   blocked_ips:
     - "192.168.1.100"
     - "192.168.1.101"
+
+redirection:
+  enabled: true
+  rules:
+    - name: "Redirect HTTP to HTTPS"
+      source_port: 80
+      destination_port: 443
+      action: "redirect"
+    - name: "API Redirection"
+      source_path: "/api/v1/*"
+      destination_path: "/api/v2/"
+      action: "redirect"

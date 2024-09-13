@@ -1,6 +1,7 @@
 # app/interfaces/api.py
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import RedirectResponse
 from app.infrastructure.config_loader import load_config
 from app.core.services.gateway_service import GatewayService
 
@@ -31,3 +32,17 @@ def check_access(request: Request):
     client_ip = request.client.host
     service.check_access(client_ip)
     return {"message": "Access granted"}
+
+@router.get("/{path:path}")
+def handle_request(path: str, request: Request):
+    """
+    Generic API endpoint to handle incoming requests and apply redirection rules.
+
+    :param path: The path of the incoming request
+    :param request: The incoming request object
+    :return: A redirection response or the requested content
+    """
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    if redirect_url:
+        return RedirectResponse(url=redirect_url)
+    return {"message": f"Request handled for path: /{path}"}

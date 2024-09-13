@@ -5,8 +5,7 @@ from app.core.entities.gateway_entity import GatewayEntity
 
 class GatewayService:
     """
-    Service layer for managing gateway operations such as starting, stopping,
-    and processing configurations, including access control.
+    Service layer for managing gateway operations including access control and redirection.
     """
 
     def __init__(self, gateway: GatewayEntity):
@@ -36,3 +35,23 @@ class GatewayService:
             raise HTTPException(status_code=403, detail="Access denied: Your IP is blocked.")
         if self.gateway.allowed_ips and client_ip not in self.gateway.allowed_ips:
             raise HTTPException(status_code=403, detail="Access denied: Your IP is not allowed.")
+
+    def handle_redirection(self, request_path: str, request_port: int) -> str:
+        """
+        Handles redirection based on the configured rules.
+
+        :param request_path: The path of the incoming request
+        :param request_port: The port of the incoming request
+        :return: A URL to redirect to or an empty string if no redirection is needed
+        """
+        if not self.gateway.config.get('redirection', {}).get('enabled', False):
+            return ""
+
+        for rule in self.gateway.config['redirection']['rules']:
+            if rule['action'] == 'redirect':
+                if 'source_port' in rule and request_port == rule['source_port']:
+                    return f"https://{self.gateway.listen_address}:{rule['destination_port']}{request_path}"
+                if 'source_path' in rule and rule['source_path'].strip('*') in request_path:
+                    return request_path.replace(rule['source_path'].strip('*'), rule['destination_path'])
+
+        return ""
