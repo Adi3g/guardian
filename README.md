@@ -1,6 +1,6 @@
 # Guardian - Configurable Security Gateway
 
-Guardian is an open-source security gateway written in Python. It provides robust features for traffic management, access control, load balancing, and security, all configurable through YAML files. Designed for modern cloud-native environments, Guardian offers a flexible and secure solution for managing network traffic.
+Guardian is a security gateway written in Python. It provides robust features for traffic management, access control, load balancing, and security, all configurable through YAML files. Designed for modern cloud-native environments, Guardian offers a flexible and secure solution for managing network traffic.
 
 ## Features
 
