@@ -10,7 +10,7 @@ class GatewayEntity:
 
     def __init__(self, name: str, version: str, listen_address: str, listen_port: int,
                  allowed_ips: List[str], blocked_ips: List[str], redirection: Optional[Dict] = None,
-                 load_balancing: Optional[Dict] = None, logging: Optional[Dict] = None):
+                 load_balancing: Optional[Dict] = None, logging: Optional[Dict] = None, security: Optional[Dict] = None):
         """
         Initializes a new instance of the GatewayEntity.
 
@@ -33,3 +33,4 @@ class GatewayEntity:
         self.redirection = redirection or {}
         self.load_balancing = load_balancing or {}
         self.logging = logging or {}
+        self.security = security or {}

@@ -3,6 +3,7 @@
 import yaml
 from app.core.entities.gateway_entity import GatewayEntity
 
+
 def load_config(config_path: str) -> GatewayEntity:
     """
     Loads the configuration from a YAML file and creates a GatewayEntity.
@@ -17,6 +18,7 @@ def load_config(config_path: str) -> GatewayEntity:
     redirection = config.get('redirection', {})
     load_balancing = config.get('load_balancing', {})
     logging = config.get('logging', {})
+    security = config.get('security', {})
 
     return GatewayEntity(
         name=general.get('gateway_name', 'Unnamed Gateway'),
@@ -27,5 +29,6 @@ def load_config(config_path: str) -> GatewayEntity:
         blocked_ips=access_control.get('blocked_ips', []),
         redirection=redirection,
         load_balancing=load_balancing,
-        logging=logging
+        logging=logging,
+        security=security
     )
