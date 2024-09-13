@@ -1,10 +1,14 @@
 # app/interfaces/api.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from app.infrastructure.config_loader import load_config
 from app.core.services.gateway_service import GatewayService
 
 router = APIRouter()
+
+# Load the configuration and initialize the service
+config = load_config('config.yaml')
+service = GatewayService(config)
 
 @router.get("/start-gateway")
 def start_gateway():
@@ -13,7 +17,17 @@ def start_gateway():
 
     :return: A message indicating the status of the gateway
     """
-    config = load_config('config.yaml')
-    service = GatewayService(config)
     service.start()
     return {"message": f"{config.name} started successfully on {config.listen_address}:{config.listen_port}"}
+
+@router.get("/check-access")
+def check_access(request: Request):
+    """
+    API endpoint to check access for a given IP address.
+
+    :param request: The incoming request object containing the client's IP
+    :return: A message indicating whether access is allowed
+    """
+    client_ip = request.client.host
+    service.check_access(client_ip)
+    return {"message": "Access granted"}

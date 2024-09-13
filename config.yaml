@@ -1,0 +1,16 @@
+# config.yaml - Configuration for Guardian Security Gateway
+
+general:
+  gateway_name: "Guardian Gateway"
+  version: "1.0.0"
+  listen_address: "0.0.0.0"
+  listen_port: 8080
+
+access_control:
+  enabled: true
+  allowed_ips:
+    - "192.168.1.10"
+    - "192.168.1.11"
+  blocked_ips:
+    - "192.168.1.100"
+    - "192.168.1.101"
