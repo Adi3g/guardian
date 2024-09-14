@@ -49,12 +49,11 @@ repos:
             - types-python-dateutil
             - types-redis
           exclude: ^testing/resources/
-    # - repo: local
-    #   hooks:
-    #       - id: pytest
-    #         name: pytest
-    #         entry: pytest
-    #         language: system
-    #         pass_filenames: false
-    #         stages: [commit]
-    #         args: ["-m", "not network"]
+    - repo: local
+      hooks:
+          - id: pytest
+            name: pytest
+            entry: pytest
+            language: system
+            pass_filenames: false
+            stages: [commit]
