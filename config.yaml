@@ -40,10 +40,30 @@ load_balancing:
 
 logging:
   enabled: true
-  log_level: "info"  # Options: debug, info, warning, error, critical
-  log_file: "guardian.log"
-  log_format: "%(levelname)s:     %(asctime)s - %(name)s - %(message)s"
+  log_level: "info"
+  log_file: "/var/log/guardian/guardian.log"
+  log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   log_rotation:
     enabled: true
     max_size: 10MB
     backup_count: 5
+
+security:
+  rate_limiting:
+    enabled: true
+    max_requests_per_minute: 100
+    ban_duration: 300  # in seconds
+
+  waf:
+    enabled: true
+    rules:
+      - name: "Block SQL Injection"
+        pattern: "SELECT|UPDATE|DELETE|INSERT"
+        action: "block"
+      - name: "Block XSS"
+        pattern: "<script>"
+        action: "block"
+
+  session_management:
+    enabled: true
+    session_timeout: 3600  # in seconds

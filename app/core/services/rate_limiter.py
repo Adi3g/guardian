@@ -1,8 +1,10 @@
 # app/core/services/rate_limiter.py
+from __future__ import annotations
+
+from collections import defaultdict
+from time import time
 
 from fastapi import HTTPException
-from time import time
-from collections import defaultdict
 
 
 class RateLimiter:
@@ -19,8 +21,8 @@ class RateLimiter:
         """
         self.max_requests = max_requests
         self.ban_duration = ban_duration
-        self.requests = defaultdict(list)
-        self.banned_ips = {}
+        self.requests: dict[str, list[float]] = defaultdict(list)  # Add type annotation here
+        self.banned_ips: dict[str, float] = {}  # Add type annotation here
 
     def is_allowed(self, client_ip: str) -> bool:
         """
@@ -33,18 +35,15 @@ class RateLimiter:
 
         # Check if IP is banned
         if client_ip in self.banned_ips and current_time < self.banned_ips[client_ip]:
-            raise HTTPException(
-                status_code=429, detail="Too many requests. You are temporarily banned.")
+            raise HTTPException(status_code=429, detail='Too many requests. You are temporarily banned.')
 
         # Clean up old requests
-        self.requests[client_ip] = [
-            t for t in self.requests[client_ip] if current_time - t < 60]
+        self.requests[client_ip] = [t for t in self.requests[client_ip] if current_time - t < 60]
 
         # Check rate limit
         if len(self.requests[client_ip]) >= self.max_requests:
             self.banned_ips[client_ip] = current_time + self.ban_duration
-            raise HTTPException(
-                status_code=429, detail="Too many requests. You are temporarily banned.")
+            raise HTTPException(status_code=429, detail='Too many requests. You are temporarily banned.')
 
         # Log the request
         self.requests[client_ip].append(current_time)
