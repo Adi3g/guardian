@@ -66,4 +66,4 @@ security:
 
   session_management:
     enabled: true
-    session_timeout: 3600  # in seconds
+    session_timeout: 1800  # 30 minutes in seconds
