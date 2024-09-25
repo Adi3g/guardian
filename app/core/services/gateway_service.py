@@ -8,6 +8,7 @@ from fastapi import HTTPException
 
 from app.core.entities.gateway_entity import GatewayEntity
 from app.core.services.rate_limiter import RateLimiter
+from app.core.services.session_manager import SessionManager
 from app.core.services.waf import WAF  # Import the WAF class
 
 # Configure logging based on the entity configuration
@@ -57,6 +58,13 @@ class GatewayService:
             self.waf: WAF | None = WAF(self.gateway.security['waf'])  # Assign WAF instance
         else:
             self.waf = None  # Use None when WAF is disabled
+
+        # Initialize Session Manager
+        if self.gateway.security.get('session_management', {}).get('enabled', False):
+            session_config = self.gateway.security['session_management']
+            self.session_manager: SessionManager | None = SessionManager(session_config['session_timeout'])
+        else:
+            self.session_manager = None
 
     def start(self):
         """
