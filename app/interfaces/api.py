@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import httpx
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
@@ -16,7 +17,6 @@ router = APIRouter()
 config = load_config('config.yaml')
 service = GatewayService(config)
 
-
 @router.get('/start-gateway')
 def start_gateway():
     """
@@ -26,7 +26,6 @@ def start_gateway():
     """
     service.start()
     return {'message': f"{config.name} started successfully on {config.listen_address}:{config.listen_port}"}
-
 
 @router.get('/check-access')
 def check_access(request: Request):
@@ -40,19 +39,22 @@ def check_access(request: Request):
     service.check_access(client_ip)
     return {'message': 'Access granted'}
 
-
 @router.get('/{path:path}')
 async def handle_request(path: str, request: Request):
     """
-    Generic API endpoint to handle incoming requests, apply redirection rules, and load balancing.
+    Generic API endpoint to handle incoming requests, apply redirection rules, WAF checks,
+    and load balancing.
 
     :param path: The path of the incoming request
     :param request: The incoming request object
     :return: A redirection response, load balanced response, or the requested content
     """
-    redirect_url = service.handle_redirection(
-        request_path=f"/{path}", request_port=request.url.port,
-    )
+    request_content = f"{request.url.path} {request.headers} {await request.body()}"
+
+    # Inspect the request using the WAF
+    service.inspect_request_with_waf(request_content)
+
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
     if redirect_url:
         return RedirectResponse(url=redirect_url)
 
@@ -64,13 +66,3 @@ async def handle_request(path: str, request: Request):
             return JSONResponse(status_code=response.status_code, content=response.json())
     except Exception as e:
         return JSONResponse(status_code=500, content={'detail': 'Error handling request', 'error': str(e)})
-
-
-@router.get('/health')
-def health_check():
-    """
-    Health check endpoint to monitor the status of the gateway.
-
-    :return: A message indicating the health status of the gateway
-    """
-    return {'status': 'healthy', 'message': 'The Guardian gateway is running properly.'}
