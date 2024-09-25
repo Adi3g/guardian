@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from itertools import cycle
 from typing import Optional  # Add this import for Optional
 
@@ -144,3 +145,15 @@ class GatewayService:
         next_server = next(self.server_iterator)
         logger.info(f"Routing to next server: {next_server['address']}:{next_server['port']}")
         return next_server
+
+    def start_session(self, user_id: str) -> str:
+        """
+        Starts a session for the given user.
+
+        :param user_id: The ID of the user
+        :return: The session ID
+        """
+        if not self.session_manager:
+            raise HTTPException(status_code=500, detail='Session management is not enabled.')
+
+        return self.session_manager.create_session(user_id)
