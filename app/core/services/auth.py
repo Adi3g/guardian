@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from datetime import timedelta
-from typing import Optional  # Import Optional
 
 from fastapi import Depends
 from fastapi import HTTPException

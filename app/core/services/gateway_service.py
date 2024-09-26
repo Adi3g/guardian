@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from itertools import cycle
 
 from fastapi import HTTPException
 
 from app.core.entities.gateway_entity import GatewayEntity
+from app.core.services.auth import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.services.auth import create_access_token
+from app.core.services.auth import verify_token
 from app.core.services.rate_limiter import RateLimiter
 from app.core.services.session_manager import SessionManager
 from app.core.services.waf import WAF
@@ -168,3 +172,25 @@ class GatewayService:
 
         if not self.session_manager.validate_session(session_id):
             raise HTTPException(status_code=401, detail='Session expired or invalid. Please log in again.')
+
+    def authenticate_user(self, user_id: str) -> str:
+        """
+        Authenticates the user and returns a JWT token.
+
+        :param user_id: The ID of the user
+        :return: JWT token if authentication is successful
+        """
+        # TODO! validate the user credentials here.
+
+        token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        token = create_access_token(data={'sub': user_id}, expires_delta=token_expires)
+        return token
+
+    def verify_jwt(self, token: str):
+        """
+        Verifies the validity of a JWT token.
+
+        :param token: The JWT token
+        :raises HTTPException: If the token is invalid or expired
+        """
+        return verify_token(token)
