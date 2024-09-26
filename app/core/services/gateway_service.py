@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import logging
-import time
 from itertools import cycle
-from typing import Optional  # Add this import for Optional
 
 from fastapi import HTTPException
 
 from app.core.entities.gateway_entity import GatewayEntity
 from app.core.services.rate_limiter import RateLimiter
 from app.core.services.session_manager import SessionManager
-from app.core.services.waf import WAF  # Import the WAF class
+from app.core.services.waf import WAF
 
 # Configure logging based on the entity configuration
 def configure_logging(log_config):
@@ -157,3 +155,16 @@ class GatewayService:
             raise HTTPException(status_code=500, detail='Session management is not enabled.')
 
         return self.session_manager.create_session(user_id)
+
+    def validate_session(self, session_id: str):
+        """
+        Validates if a session is active and valid.
+
+        :param session_id: The session ID
+        :raises HTTPException: If the session is invalid or expired
+        """
+        if not self.session_manager:
+            raise HTTPException(status_code=500, detail='Session management is not enabled.')
+
+        if not self.session_manager.validate_session(session_id):
+            raise HTTPException(status_code=401, detail='Session expired or invalid. Please log in again.')
