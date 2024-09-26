@@ -41,7 +41,7 @@ load_balancing:
 logging:
   enabled: true
   log_level: "info"
-  log_file: "/var/log/guardian/guardian.log"
+  log_file: "guardian.log"
   log_format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   log_rotation:
     enabled: true
