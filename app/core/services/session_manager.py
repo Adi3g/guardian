@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import time
-from typing import Dict
-from typing import Optional
 
 class SessionManager:
     def __init__(self, session_timeout: int):
