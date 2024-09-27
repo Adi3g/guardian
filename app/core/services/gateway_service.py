@@ -6,28 +6,15 @@ from itertools import cycle
 
 from fastapi import HTTPException
 
+from .logger import logger
 from app.core.entities.gateway_entity import GatewayEntity
 from app.core.services.auth import ACCESS_TOKEN_EXPIRE_MINUTES
 from app.core.services.auth import create_access_token
 from app.core.services.auth import verify_token
+from app.core.services.logger import configure_logging
 from app.core.services.rate_limiter import RateLimiter
 from app.core.services.session_manager import SessionManager
 from app.core.services.waf import WAF
-
-# Configure logging based on the entity configuration
-def configure_logging(log_config):
-    if log_config.get('enabled', False):
-        logging.basicConfig(
-            level=getattr(logging, log_config.get('log_level', 'INFO').upper(), logging.INFO),
-            format=log_config.get('log_format', '%(levelname)s: %(asctime)s - %(name)s - %(message)s'),
-            handlers=[
-                logging.FileHandler(log_config.get('log_file', 'guardian.log')),
-                logging.StreamHandler(),
-            ],
-        )
-
-
-logger = logging.getLogger('guardian')
 
 
 class GatewayService:
