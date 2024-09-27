@@ -128,3 +128,31 @@ async def handle_patch_request(path: str, request: Request):
             return JSONResponse(status_code=response.status_code, content=response.json())
     except Exception as e:
         return JSONResponse(status_code=500, content={'detail': 'Error handling request', 'error': str(e)})
+
+@router.put('/{path:path}')
+async def handle_put_request(path: str, request: Request):
+    """
+    Generic API endpoint to handle incoming requests, apply redirection rules, WAF checks,
+    and load balancing.
+
+    :param path: The path of the incoming request
+    :param request: The incoming request object
+    :return: A redirection response, load balanced response, or the requested content
+    """
+    request_content = f"{request.url.path} {request.headers} {await request.body()}"
+
+    # Inspect the request using the WAF
+    service.inspect_request_with_waf(request_content)
+
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    if redirect_url:
+        return RedirectResponse(url=redirect_url)
+
+    try:
+        next_server = service.get_next_server()
+        # Forward the request to the next server
+        async with httpx.AsyncClient() as client:
+            response = await client.put(f"http://{next_server['address']}:{next_server['port']}/{path}", data=await request.body())
+            return JSONResponse(status_code=response.status_code, content=response.json())
+    except Exception as e:
+        return JSONResponse(status_code=500, content={'detail': 'Error handling request', 'error': str(e)})
