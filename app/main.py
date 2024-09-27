@@ -14,7 +14,6 @@ app = FastAPI(title='Guardian Security Gateway')
 # Add MetricsMiddleware to capture metrics on every request
 app.add_middleware(MetricsMiddleware)
 
-
 # Prometheus Metrics endpoint
 @app.get('/metrics')
 def metrics():
@@ -22,7 +21,6 @@ def metrics():
     Endpoint to expose Prometheus metrics for scraping.
     """
     return PlainTextResponse(generate_latest())
-
 
 # Include the API router
 app.include_router(router)
