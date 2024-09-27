@@ -68,7 +68,7 @@ async def handle_get_request(path: str, request: Request):
         next_server = service.get_next_server()
         # Forward the request to the next server
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://{next_server['address']}:{next_server['port']}/{path}", data=await request.body(), params=request.query_params)
+            response = await client.get(f"http://{next_server['address']}:{next_server['port']}/{path}", params=request.query_params)
             return JSONResponse(status_code=response.status_code, content=response.json())
     except Exception as e:
         return JSONResponse(status_code=500, content={'detail': 'Error handling request', 'error': str(e)})
