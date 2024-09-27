@@ -7,6 +7,7 @@ from fastapi import Depends
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.core.services.gateway_service import GatewayService
 from app.infrastructure.config_loader import load_config
@@ -38,6 +39,13 @@ def check_access(request: Request):
     client_ip = request.client.host
     service.check_access(client_ip)
     return {'message': 'Access granted'}
+
+@router.get('/health')
+def health_check():
+    """
+    A simple health check endpoint.
+    """
+    return {'status': 'healthy'}
 
 @router.get('/{path:path}')
 async def handle_request(path: str, request: Request):
