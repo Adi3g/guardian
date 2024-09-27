@@ -15,16 +15,7 @@ router = APIRouter()
 # Load the configuration and initialize the service
 config = load_config('config.yaml')
 service = GatewayService(config)
-
-@router.get('/start-gateway')
-def start_gateway():
-    """
-    API endpoint to start the security gateway.
-
-    :return: A message indicating the status of the gateway
-    """
-    service.start()
-    return {'message': f"{config.name} started successfully on {config.listen_address}:{config.listen_port}"}
+service.start()
 
 @router.get('/check-access')
 def check_access(request: Request):
