@@ -46,12 +46,13 @@ async def handle_get_request(path: str, request: Request):
     :param request: The incoming request object
     :return: A redirection response, load balanced response, or the requested content
     """
-    request_content = f"{request.url.path} {request.headers} {await request.body()}"
+    query_params = dict(request.query_params)
+    request_content = f"{request.url.path} {request.headers} {await request.body()} {query_params}"
 
     # Inspect the request using the WAF
     service.inspect_request_with_waf(request_content)
 
-    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port, query_params=query_params)
     if redirect_url:
         return RedirectResponse(url=redirect_url)
 
@@ -59,7 +60,7 @@ async def handle_get_request(path: str, request: Request):
         next_server = service.get_next_server()
         # Forward the request to the next server
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"http://{next_server['address']}:{next_server['port']}/{path}", params=request.query_params)
+            response = await client.get(f"http://{next_server['address']}:{next_server['port']}/{path}", params=query_params)
             return JSONResponse(status_code=response.status_code, content=response.json())
     except Exception as e:
         return JSONResponse(status_code=500, content={'detail': 'Error handling request', 'error': str(e)})
@@ -74,12 +75,13 @@ async def handle_post_equest(path: str, request: Request):
     :param request: The incoming request object
     :return: A redirection response, load balanced response, or the requested content
     """
+    query_params = dict(request.query_params)
     request_content = f"{request.url.path} {request.headers} {await request.body()}"
 
     # Inspect the request using the WAF
     service.inspect_request_with_waf(request_content)
 
-    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port, query_params=query_params)
     if redirect_url:
         return RedirectResponse(url=redirect_url)
 
@@ -102,12 +104,13 @@ async def handle_patch_request(path: str, request: Request):
     :param request: The incoming request object
     :return: A redirection response, load balanced response, or the requested content
     """
+    query_params = dict(request.query_params)
     request_content = f"{request.url.path} {request.headers} {await request.body()}"
 
     # Inspect the request using the WAF
     service.inspect_request_with_waf(request_content)
 
-    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port, query_params=query_params)
     if redirect_url:
         return RedirectResponse(url=redirect_url)
 
@@ -130,12 +133,13 @@ async def handle_put_request(path: str, request: Request):
     :param request: The incoming request object
     :return: A redirection response, load balanced response, or the requested content
     """
+    query_params = dict(request.query_params)
     request_content = f"{request.url.path} {request.headers} {await request.body()}"
 
     # Inspect the request using the WAF
     service.inspect_request_with_waf(request_content)
 
-    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port)
+    redirect_url = service.handle_redirection(request_path=f"/{path}", request_port=request.url.port, query_params=query_params)
     if redirect_url:
         return RedirectResponse(url=redirect_url)
 

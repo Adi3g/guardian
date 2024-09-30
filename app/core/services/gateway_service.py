@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import urllib.parse
 from datetime import timedelta
 from itertools import cycle
 
@@ -15,7 +16,6 @@ from app.core.services.logger import configure_logging
 from app.core.services.rate_limiter import RateLimiter
 from app.core.services.session_manager import SessionManager
 from app.core.services.waf import WAF
-
 
 class GatewayService:
     """
@@ -86,12 +86,13 @@ class GatewayService:
 
         logger.info(f"Access granted for IP: {client_ip}")
 
-    def handle_redirection(self, request_path: str, request_port: int) -> str:
+    def handle_redirection(self, request_path: str, request_port: int, query_params: dict = {}) -> str:
         """
-        Handles redirection based on the configured rules.
+        Handles redirection based on the configured rules and includes query parameters.
 
         :param request_path: The path of the incoming request
         :param request_port: The port of the incoming request
+        :param query_params: The query parameters of the incoming request
         :return: A URL to redirect to or an empty string if no redirection is needed
         """
         if not self.gateway.redirection.get('enabled', False):
@@ -99,13 +100,27 @@ class GatewayService:
 
         for rule in self.gateway.redirection.get('rules', []):
             if rule['action'] == 'redirect':
+                # Handling redirection based on source port
                 if 'source_port' in rule and request_port == rule['source_port']:
                     redirect_url = f"https://{self.gateway.listen_address}:{rule['destination_port']}{request_path}"
+
+                    # Append query parameters to the redirect URL
+                    if query_params:
+                        query_string = urllib.parse.urlencode(query_params)
+                        redirect_url = f"{redirect_url}?{query_string}"
+
                     logger.info(f"Redirecting from port {request_port} to {rule['destination_port']} with URL {redirect_url}")
                     return redirect_url
 
+                # Handling redirection based on source path
                 if 'source_path' in rule and rule['source_path'].strip('*') in request_path:
                     redirect_url = request_path.replace(rule['source_path'].strip('*'), rule['destination_path'])
+
+                    # Append query parameters to the redirect URL
+                    if query_params:
+                        query_string = urllib.parse.urlencode(query_params)
+                        redirect_url = f"{redirect_url}?{query_string}"
+
                     logger.info(f"Redirecting path {request_path} to {redirect_url}")
                     return redirect_url
 
