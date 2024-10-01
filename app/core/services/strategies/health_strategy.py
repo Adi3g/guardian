@@ -9,11 +9,13 @@ from .base_strategy import LoadBalancingStrategy
 class LoadBalancingStrategyWithHealth(LoadBalancingStrategy):
     """
     Extends the base strategy class with basic health checking.
+    Acts as a wrapper for any base load balancing strategy.
     """
-    def __init__(self, servers: list[dict]):
-        super().__init__(servers)
-        self.server_health: dict[str, bool] = {server['address']: True for server in servers}
-        self.failed_servers: dict[str, float] = {}
+    def __init__(self, base_strategy: LoadBalancingStrategy):
+        self.base_strategy = base_strategy
+        self.servers = base_strategy.servers
+        self.server_health: dict[str, bool] = {server['address']: True for server in self.servers}
+        self.failed_servers: dict[str, float] = {}  # Track failed servers and their failure times
 
     def handle_server_failure(self, server: dict):
         """
@@ -40,11 +42,12 @@ class LoadBalancingStrategyWithHealth(LoadBalancingStrategy):
 
     def get_next_server(self) -> dict:
         """
-        Override the abstract method to return the next healthy server.
+        Delegate to the base strategy but only return healthy servers.
         """
         healthy_servers = self.get_healthy_servers()
         if not healthy_servers:
             raise Exception('No healthy servers available')
 
-        # Use a custom logic or call an existing strategy to choose from healthy servers
-        return healthy_servers[0]  # For example, just pick the first healthy server
+        # Set the base strategy's server list to the healthy servers only
+        self.base_strategy.servers = healthy_servers
+        return self.base_strategy.get_next_server()  # Use the base strategy to select a healthy server

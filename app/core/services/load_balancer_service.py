@@ -1,68 +1,68 @@
 from __future__ import annotations
 
-import random
-from itertools import cycle
-
-from fastapi import HTTPException
+from .strategies.base_strategy import LoadBalancingStrategy
+from .strategies.health_strategy import LoadBalancingStrategyWithHealth
+from .strategies.least_connections_strategy import LeastConnectionsStrategy
+from .strategies.random_strategy import RandomStrategy
+from .strategies.round_robin_strategy import RoundRobinStrategy
 
 class LoadBalancerService:
     """
     Service to manage load balancing across multiple strategies.
-    Supports round-robin, random, and least-connections strategies.
+    Supports round-robin, random, and least-connections strategies with optional health checking.
     """
 
-    def __init__(self, strategy: str, servers: list[dict]):
-        """
-        Initializes the LoadBalancerService with the selected strategy and server pool.
-
-        :param strategy: The load balancing strategy (round-robin, least-connections, random)
-        :param servers: A list of server dictionaries with 'address' and 'port' keys
-        """
+    def __init__(self, strategy: str, servers: list[dict], enable_health_checking: bool = False):
+        self.strategy_name = strategy
         self.servers = servers
-        self.strategy = strategy
-        self.server_connections = {server['address']: 0 for server in servers}
+        self.enable_health_checking = enable_health_checking
+        self.strategy: LoadBalancingStrategy = self._select_strategy(strategy)
+
+    def _select_strategy(self, strategy: str) -> LoadBalancingStrategy:
+        """
+        Selects the appropriate load balancing strategy based on the configuration.
+        Optionally wraps the strategy with health checking if enabled.
+        """
+        base_strategy: LoadBalancingStrategy  # Explicitly type as LoadBalancingStrategy
 
         if strategy == 'round-robin':
-            self.server_iterator = cycle(servers)
+            base_strategy = RoundRobinStrategy(self.servers)
         elif strategy == 'random':
-            pass  # No special setup needed for random strategy
+            base_strategy = RandomStrategy(self.servers)
         elif strategy == 'least-connections':
-            pass  # Least-connections handled using connection counts
+            base_strategy = LeastConnectionsStrategy(self.servers)
         else:
             raise ValueError(f"Unsupported load balancing strategy: {strategy}")
+
+        # Wrap the strategy with health checking if enabled
+        if self.enable_health_checking:
+            return LoadBalancingStrategyWithHealth(base_strategy)
+        return base_strategy
 
     def get_next_server(self) -> dict:
         """
         Returns the next server based on the selected load balancing strategy.
-
-        :return: The selected server dictionary with 'address' and 'port'
         """
-        if self.strategy == 'round-robin':
-            return next(self.server_iterator)
-        elif self.strategy == 'random':
-            return random.choice(self.servers)
-        elif self.strategy == 'least-connections':
-            # Select the server with the fewest active connections
-            return min(self.servers, key=lambda server: self.server_connections[server['address']])
-        else:
-            raise HTTPException(status_code=500, detail=f"Unsupported load balancing strategy: {self.strategy}")
+        return self.strategy.get_next_server()
+
+    def handle_server_failure(self, server: dict):
+        """
+        Handles server failure by marking the server as unhealthy.
+        This is only applicable if health checking is enabled.
+        """
+        if isinstance(self.strategy, LoadBalancingStrategyWithHealth):
+            self.strategy.handle_server_failure(server)
 
     def increment_connection(self, server: dict):
         """
-        Increments the active connection count for a given server.
-        This is primarily used in the least-connections strategy.
-
-        :param server: The server dictionary whose connection count is to be incremented
+        Increments the active connection count for the server (used in least-connections).
         """
-        if self.strategy == 'least-connections':
-            self.server_connections[server['address']] += 1
+        if isinstance(self.strategy, LeastConnectionsStrategy):
+            self.strategy.increment_connection(server)
 
     def decrement_connection(self, server: dict):
         """
-        Decrements the active connection count for a given server.
-        This is primarily used in the least-connections strategy.
-
-        :param server: The server dictionary whose connection count is to be decremented
+        Decrements the active connection count for the server (used in least-connections).
         """
-        if self.strategy == 'least-connections':
-            self.server_connections[server['address']] = max(0, self.server_connections[server['address']])
+        if isinstance(self.strategy, LeastConnectionsStrategy):
+            self.strategy.decrement_connection(server)
