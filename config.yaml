@@ -26,13 +26,12 @@ redirection:
       source_path: "/api/v1/*"
       destination_path: "/"
       action: "redirect"
-
-load_balancing:
-  enabled: true
-  strategy: "round_robin"
-  servers:
-    - address: "127.0.0.1"
-      port: 8001
+      load_balancing:
+        enabled: true
+        strategy: "round_robin"
+        servers:
+          - address: "127.0.0.1"
+            port: 8001
 
 logging:
   enabled: true
